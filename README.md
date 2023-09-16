@@ -9,7 +9,7 @@ When running the scan section code, the interpreter can recognize certain charac
 etc.
 
 Just like the following: 
-```shell
+```shell
 > 
 + - * !
 PLUS + null

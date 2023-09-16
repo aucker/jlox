@@ -1,4 +1,4 @@
-package lox;
+package lox.lox;
 
 enum TokenType {
     // Single-character tokens.
