@@ -1,6 +1,14 @@
+package lox;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static lox.TokenType.*;
 
-class Scanner {
+public class Scanner {
+    
     private final String source;
     private final List<Token> tokens = new ArrayList<>();
 
@@ -25,7 +33,7 @@ class Scanner {
         keywords.put("true",    TRUE);
         keywords.put("var",     VAR);
         keywords.put("while",   WHILE);
-    }
+    };
 
     /*start and current fields are offsets that index into the string
      * start points to the first character in the lexeme being scanned
@@ -44,7 +52,7 @@ class Scanner {
         while (!isAtEnd()) {
             // we are at the beginning of the next lexeme
             start = current;
-            scanTokens();
+            scanToken();
         }
 
         tokens.add(new Token(EOF, "", null, line));
@@ -167,6 +175,8 @@ class Scanner {
         if (source.charAt(current) != expected) return false;
 
         current++;
+        return true; 
+    }
 
     private char peek() {
         if (isAtEnd()) return '\0';
