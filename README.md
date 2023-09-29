@@ -127,3 +127,14 @@ and we're left with:
 ![breakfast expand](pic/breakfast.png)
 
 ### *Enhancing our notation*
+
+## Parsing Expressions
+
+The cover of _Compilers: Principles, Techniques, and Tools_ literally has a dragon labeled "complexity
+of compiler design" being slain by a knight bearing a sword and shield branched "LAIR parser generator"
+and "syntax directed translation". They laid it on thick.
+
+A little self-congratulation is well-deserved, but the truth is you don't need to know most of that
+stuff to bang out a high quality parser for a modern machine. As always, I encourage you to broaden your
+education and take it in later, but this book omits the trophy case.
+
