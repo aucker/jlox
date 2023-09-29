@@ -138,3 +138,28 @@ A little self-congratulation is well-deserved, but the truth is you don't need t
 stuff to bang out a high quality parser for a modern machine. As always, I encourage you to broaden your
 education and take it in later, but this book omits the trophy case.
 
+## Evaluating Expressions
+
+Lox doesn't do implicit conversions in equality and Java does not either. We do have to handle `nil/null`
+specially so that we don't throw a `NullPointerException` if we try to call `equals()` on `null`. Otherwise,
+we're fine. Java's `equals()` method on Boolean, Double, and String have the behavior we want for Lox.
+
+What do you expect this to evaluate to:
+```
+(0 / 0) == (0 / 0)
+```
+According to [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754), which specifies the behaviors of
+double-precision numbers, dividing a zero by zero gives you the special **NaN** ("not a number") value.
+Strangely enough, NaN is *not* equal to itself.
+
+In Java, the `==` operator on primitive doubles preserves that behavior, but the `equals()` method on the
+Double class does not. Lox uses the latter, so doesn't follow IEEE. These kinds of subtle incompatibilities
+occupy a dismaying fraction of language implementers' lives.
+
+We could simply not detect or report a type error at all. This is what C does if you cast a pointer to some
+type that doesn't match the data that is actually being pointed to. C gains flexibility and speed by
+allowing that, but is also famously dangerous. Once you misinterpret bits in memory, all bets are off.
+
+Few modern languages accept unsafe operations like that. Instead, most are **memory safe** and ensure - through
+a combination of static and runtime checks - that a program can never incorrectly interpret the value stored
+in a piece of memory.
