@@ -19,7 +19,7 @@ class Interpreter implements Expr.Visitor<Object> {
     Evaluating literals
      */
     @Override
-    public Object visitLiteralExpr(Expr.Visitor.Literal expr) {
+    public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value;
     }
 
@@ -27,13 +27,13 @@ class Interpreter implements Expr.Visitor<Object> {
     Evaluating parentheses
      */
     @Override
-    public Object visitGroupingExpr(Expr.Visitor.Grouping expr) {
+    public Object visitGroupingExpr(Expr.Grouping expr) {
         return evaluate(expr.expression);
     }
 
     // Evaluating unary expressions
     @Override
-    public Object visitUnaryExpr(Expr.Visitor.Unary expr) {
+    public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = evaluate(expr.right);
 
         switch (expr.operator.type) {
@@ -47,10 +47,6 @@ class Interpreter implements Expr.Visitor<Object> {
         return null;
     }
 
-    @Override
-    public <R> R accept(Expr.Visitor<R> visitor) {
-        return null;
-    }
 
     // Truthiness and falsiness
     private boolean isTruthy(Object object) {
@@ -84,7 +80,7 @@ class Interpreter implements Expr.Visitor<Object> {
     }
 
     @Override
-    public Object visitBinaryExpr(Expr.Visitor.Binary expr) {
+    public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = evaluate(expr.left);
         Object right = evaluate(expr.right);
 

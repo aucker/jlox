@@ -35,7 +35,7 @@ class Parser {
         while (match(BANG_EQUAL, EQUAL_EQUAL)) {
             Token operator = previous();
             Expr right = comparison();
-            expr = new Expr.Visitor.Binary(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, right);
         }
 
         return expr;
@@ -47,7 +47,7 @@ class Parser {
         while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
             Token operator = previous();
             Expr right = term();
-            expr = new Expr.Visitor.Binary(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, right);
         }
 
         return expr;
@@ -60,7 +60,7 @@ class Parser {
             Token operator = previous();
             Expr right = factor();
 //            expr = new Expr.Binary(expr, operator, right);
-            expr = new Expr.Visitor.Binary(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, right);
         }
 
         return expr;
@@ -73,7 +73,7 @@ class Parser {
             Token operator = previous();
             Expr right = unary();
 //            expr = new Expr.Binary(expr, operator, right);
-            expr = new Expr.Visitor.Binary(expr, operator, right);
+            expr = new Expr.Binary(expr, operator, right);
         }
         return expr;
     }
@@ -83,24 +83,24 @@ class Parser {
             Token operator = previous();
             Expr right = unary();
 //            return new Expr.Unary(operator, right);
-            return new Expr.Visitor.Unary(operator, right);
+            return new Expr.Unary(operator, right);
         }
         return primary();
     }
 
     private Expr primary() {
-        if (match(FALSE)) return new Expr.Visitor.Literal(false);
-        if (match(TRUE)) return new Expr.Visitor.Literal(true);
-        if (match(NIL)) return new Expr.Visitor.Literal(null);
+        if (match(FALSE)) return new Expr.Literal(false);
+        if (match(TRUE)) return new Expr.Literal(true);
+        if (match(NIL)) return new Expr.Literal(null);
 
         if (match(NUMBER, STRING)) {
-            return new Expr.Visitor.Literal(previous().literal);
+            return new Expr.Literal(previous().literal);
         }
 
         if (match(LEFT_PAREN)) {
             Expr expr = expression();
             consume(RIGHT_PAREN, "Expect ')' after expression.");
-            return new Expr.Visitor.Grouping(expr);
+            return new Expr.Grouping(expr);
         }
 
         throw error(peek(), "Expect expression.");
