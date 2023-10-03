@@ -303,3 +303,183 @@ add property setters on objects, like:
 ```shell
 instance.field = "value";
 ```
+
+Consider:
+```shell
+var a = "before";
+a = "value";
+```
+
+On the second line, we don't *evaluate* `a` (which would return the string "before").
+We figure out what variable `a` refers to, so we know where to store the right-hand side expression's
+value. The [classic terms](https://en.wikipedia.org/wiki/Value_(computer_science)#lrvalue) for these 
+two constructs are **l-value** and **r-value**. All the expressions that we've seen so far that 
+produce values are r-values. An l-values "evaluates" to a storage location that you can assign into.
+
+We want the syntax tree to reflect that an l-value isn't evaluated like a normal expression. That's 
+why the Expr.Assign node has a *Token* for the left-hand side, not an Expr. The problem is that the 
+parser doesn't know it's parsing an l-value until it hits the =. In a complex l-value, that may 
+occur many tokens later.
+```shell
+makeList().head.next = node;
+```
+
+#### *Assignment semantics*
+
+The key difference between assignment and definition is that assignment is not allowed to create a 
+*new* variable. In terms of our implementation, that means it's a runtime error if the key doesn't 
+already exist in the environment's variable map.
+
+The last thing the `visit()` method does is return the assigned value. That's because assignment is 
+an expression that can be nested inside other expressions, like so:
+```shell
+var a = 1;
+print a = 2;  // "2"
+```
+
+Our interpreter can now create, read, and modify variables. It's about as sophisticated as early 
+BASICs. Global variables are simple, but writing a large program when any two chunks of code can 
+accidentally step on each other's state is no fun. We want *local* variables, which means it's 
+time for *scope*.
+
+> Note: How to fix idea go to editor with escape when editing in terminal vim:
+> [intellij support](https://intellij-support.jetbrains.com/hc/en-us/community/posts/360003508579/comments/360001567559)
+
+### **Scope**
+
+A **scope** defines a region where a name maps to a certain entity. Multiple scopes enable the 
+same name to refer to different things in different contexts. In my house, "Bob" usually 
+refers to me. But maybe in your town you know a different Bob. Same name, but different dudes 
+on where you say it.
+
+**Lexical scope** (or the less commonly heard **static scope**) is a specific style of scoping 
+where the text of the program itself shows where a scope begins and ends. In Lox, as in most 
+modern languages, variables are lexically scoped. When you see an expression that uses some 
+variable, you can figure out which variable declaration it refers to just by statically reading 
+the code.
+
+E.g.:
+```shell
+{
+  var a = "first";
+  print a;  // "first"
+}
+
+{
+  var a = "second";
+  print a; // "second"
+}
+```
+Here, we have two blocks with a variable `a` declared in each of them. You and I can tell just 
+from looking at the code that the use of `a` in the first `print` statement refers to the first 
+`a`, and the second one refers to the second.
+![scope](pic/scope.png)
+
+This is in contrast to **dynamic scope** where you don't know what a name refers to until you 
+execute the code. Lox doesn't have dynamically scoped *variables*, but methods and fields on 
+objects are dynamically scoped.
+```shell
+class Saxophone {
+  play() {
+    print "Careless Whisper";
+  }
+}
+
+class GolfClub {
+  play() {
+    print "Fore!";
+  }
+}
+
+fun palyIt(thing) {
+  thing.play();
+}
+```
+
+When `playIt()` calls `thing.play()`, we don't know if we're about to hear "Careless Whisper"
+or "Fore!". It depends on whether you pass a Saxophone or a GolfClub to the function, and we 
+don't know that until runtime.
+
+Scope and environments are close cousins. The former is the theoretical concept, and the latter
+is the machinery that implements it. As our interpreter works its way through code, syntax tree
+nodes that affect scope will change the environment. In a C-ish syntax like Lox's, scope is 
+controlled by curly-braced blocks. (That's why we call it **block scope**).
+```shell
+{
+  var a = "in block";
+}
+print a;  // Error! No more "a".
+```
+The beginning of a block introduces a new local scope, and that scope ends when execution passes 
+the closing `}`. Any variables declared inside the block disappear.
+
+#### *Nesting and shadowing*
+
+A first cut at implementing block scope might work like this:
+1. As we visit each statement inside the block, keep track of any variables declared.
+2. After the last statement is executed, tell the environment to delete all of those variables.
+
+That would work for the previous example. But remember, one motivation for local scope is 
+encapsulation — a block of code in one corner of the program shouldn't interfere with some 
+other block. Check this out:
+```shell
+// How loud?
+var volume = 11;
+
+// Silence.
+volume = 0;
+
+// Calculate size of 3x4x5 cuboid.
+{
+  var volume = 3 * 4 * 5;
+  print volume;
+}
+```
+Look at the block where we calculate the volume of the cuboid using a local declaration of `volume`.
+After the block exits, the interpreter will delete the *global* `volume` variable. That ain't right.
+When we exit the block, we should remove any variables declared inside the block, but if there is
+a variable with the same name declared outside the block, *that's a different variable*. It shouldn't
+get touched.
+
+When a local variable has the same name as a variable in an enclosing scope, it **shadows** the 
+outer one. Code inside the block can't see it any more - it is hidden in the "shadow" cast by the
+inner one - but it's still there.
+
+When we enter a new block scope, we need to preserve variable defined in outer scopes, so they are 
+still around when we exit the inner block. We do that by defining a fresh environment for each block
+containing only the variables defined in that scope. When we exit the block, we discard its 
+environment and restore the previous one.
+
+We also need to handle enclosing variables that are *not* shadowed.
+```shell
+var global = "outside";
+{
+  var local = "inside";
+  print global + local;
+}
+```
+Here, `global` lives in the outer global environment and `local` is defined inside the block's 
+environment. In that `print` statement, both of those variables are in scope. In order to find 
+them, the interpreter must search not only the current innermost environment, but also any 
+enclosing ones.
+
+We implement this by chaining the environments together. Each environment has a reference to the 
+environment of the immediately enclosing scope. When we look up a variable, we walk that chain from
+innermost out until we find the variable. Starting at the inner scope is how we make local 
+variable shadow outer ones.
+![scope-level](pic/scope-level.png)
+Before we add block syntax to the grammar, we'll beef up our Environment class with support for this
+nesting. First, we give each environment a reference to its enclosing one.
+
+#### *Block syntax and semantics*
+
+Now the Environments nest, we're ready to add blocks to the language. Behold the grammar:
+```shell
+statement       -> exprStmt
+                 | printStmt
+                 | block ;
+                 
+block           -> "{" declaration* "}" ;
+```
+A block is a (possible empty) series of statements or declarations surrounded by curly braces. A 
+block is itself a statement and can appear anywhere a statement is allowed.

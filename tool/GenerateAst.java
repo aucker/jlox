@@ -27,6 +27,7 @@ public class GenerateAst {
 
 //>     Statements and State stmt-ast
         defineAst(outputDir, "Stmt", Arrays.asList(
+                "Block      : List<Stmt> statements",
                 "Expression : Expr expression",
 //>     var-stmt-ast
                 "Print      : Expr expression",

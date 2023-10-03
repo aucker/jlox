@@ -112,6 +112,32 @@ class Interpreter implements Expr.Visitor<Object>,
         stmt.accept(this);
     }
 
+    void executeBlock(List<Stmt> statements,
+                      Environment environment) {
+        Environment previous = this.environment;
+        try {
+            this.environment = environment;
+
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+        } finally {
+            this.environment = previous;
+        }
+    }
+
+    /*
+    Up until now, the `environment` field in Interpreter always pointed to the same
+    environment - the global one. Now, that field represents the *current* environment.
+    That's the environment that corresponds to the innermost scope containing the code
+    to be executed.
+     */
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
     /*
     Java doesn't let you use `void` as a generic type argument for obscure reasons
     having to do with type erasure and this stack.
