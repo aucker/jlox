@@ -271,3 +271,75 @@ own class.
 > lexical scoping to the world - so it's hard to go wrong if you follow in their footsteps.
 > 
 > Scheme allows redefining variables at the top level.
+
+### **Assignment**
+
+It's possible to create a language that has variables but does not let you reassign - or **mutate** --
+them. Haskell is one example. SML supports only mutable references and arrays - variables cannot be 
+reassigned. Rust steers you away from mutation by requiring a `mut` modifier to enable assignment.
+
+Mutating a variable is a side effect and, as the name suggests, some language folks think side effects 
+are dirty or inelegant. Code should be pure math that produces values - crystalline, unchanging ones - 
+like an act of divine creation. Not some grubby automaton that beats blobs of data into shape, one 
+imperative grunt at a time.
+
+Lox is not so austere. Lox is an imperative language, and mutation comes with the territory. Adding 
+support for assignment doesn't require much work. Global variables already support redefinition, so 
+most of the machinery is there now. Mainly, we're missing an explicit assignment notation.
+
+#### *Assignment syntax*
+
+That little `=` syntax is more complex than it might seem. Like most C-derived languages, assignment 
+is an expression and not a statement. As in C, it is the lowest precedence expression form. That means 
+the rule slots between `expression` and `equality` (the next lowest precedence expression).
+```shell
+expression      -> assignment ;
+assignment      -> IDENTIFIER "=" assignment
+                 | equality ;
+```
+This says an `assignment` is either an identifier followed by an `=` and an expression for the value, 
+or an `equality` (and thus any other) expression. Later, `assignment` will get more complex when we 
+add property setters on objects, like:
+```shell
+instance.field = "value";
+```
+
+Consider:
+```shell
+var a = "before";
+a = "value";
+```
+
+On the second line, we don't *evaluate* `a` (which would return the string "before").
+We figure out what variable `a` refers to, so we know where to store the right-hand side expression's
+value. The [classic terms](https://en.wikipedia.org/wiki/Value_(computer_science)#lrvalue) for these 
+two constructs are **l-value** and **r-value**. All the expressions that we've seen so far that 
+produce values are r-values. An l-values "evaluates" to a storage location that you can assign into.
+
+We want the syntax tree to reflect that an l-value isn't evaluated like a normal expression. That's 
+why the Expr.Assign node has a *Token* for the left-hand side, not an Expr. The problem is that the 
+parser doesn't know it's parsing an l-value until it hits the =. In a complex l-value, that may 
+occur many tokens later.
+```shell
+makeList().head.next = node;
+```
+
+#### *Assignment semantics*
+
+The key difference between assignment and definition is that assignment is not allowed to create a 
+*new* variable. In terms of our implementation, that means it's a runtime error if the key doesn't 
+already exist in the environment's variable map.
+
+The last thing the `visit()` method does is return the assigned value. That's because assignment is 
+an expression that can be nested inside other expressions, like so:
+```shell
+var a = 1;
+print a = 2;  // "2"
+```
+
+Our interpreter can now create, read, and modify variables. It's about as sophisticated as early 
+BASICs. Global variables are simple, but writing a large program when any two chunks of code can 
+accidentally step on each other's state is no fun. We want *local* variables, which means it's 
+time for *scope*.
+
+

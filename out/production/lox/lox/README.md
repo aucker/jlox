@@ -271,3 +271,35 @@ own class.
 > lexical scoping to the world - so it's hard to go wrong if you follow in their footsteps.
 > 
 > Scheme allows redefining variables at the top level.
+
+### **Assignment**
+
+It's possible to create a language that has variables but does not let you reassign - or **mutate** --
+them. Haskell is one example. SML supports only mutable references and arrays - variables cannot be 
+reassigned. Rust steers you away from mutation by requiring a `mut` modifier to enable assignment.
+
+Mutating a variable is a side effect and, as the name suggests, some language folks think side effects 
+are dirty or inelegant. Code should be pure math that produces values - crystalline, unchanging ones - 
+like an act of divine creation. Not some grubby automaton that beats blobs of data into shape, one 
+imperative grunt at a time.
+
+Lox is not so austere. Lox is an imperative language, and mutation comes with the territory. Adding 
+support for assignment doesn't require much work. Global variables already support redefinition, so 
+most of the machinery is there now. Mainly, we're missing an explicit assignment notation.
+
+#### *Assignment syntax*
+
+That little `=` syntax is more complex than it might seem. Like most C-derived languages, assignment 
+is an expression and not a statement. As in C, it is the lowest precedence expression form. That means 
+the rule slots between `expression` and `equality` (the next lowest precedence expression).
+```shell
+expression      -> assignment ;
+assignment      -> IDENTIFIER "=" assignment
+                 | equality ;
+```
+This says an `assignment` is either an identifier followed by an `=` and an expression for the value, 
+or an `equality` (and thus any other) expression. Later, `assignment` will get more complex when we 
+add property setters on objects, like:
+```shell
+instance.field = "value";
+```
