@@ -163,3 +163,14 @@ allowing that, but is also famously dangerous. Once you misinterpret bits in mem
 Few modern languages accept unsafe operations like that. Instead, most are **memory safe** and ensure - through
 a combination of static and runtime checks - that a program can never incorrectly interpret the value stored
 in a piece of memory.
+
+### *Executing statements*
+
+We're running through the previous couple of chapter in microcosm, working our way through the front end. Our
+parser can now produce statement syntax trees, so the next and final step is to interpret them. As in
+expressions, we use the **Visitor** pattern, but we have a new visitor interface, `Stmt.Visitor`, to implement
+since statements have their own base class.
+
+By the way, from the `Interpreter.java` file.
+
+The class is default `PROTECTED` in java.

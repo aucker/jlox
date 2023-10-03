@@ -1,15 +1,32 @@
 package lox.lox;
 
+import java.util.List;
+
 import static lox.lox.TokenType.MINUS;
 
 // when we use public class, it will be accessed everywhere
 // but a default *class* is project protected
-class Interpreter implements Expr.Visitor<Object> {
+class Interpreter implements Expr.Visitor<Object>,
+                             Stmt.Visitor<Void> {
 
-    void interpret(Expr expression) {
+    //void interpret(Expr expression) {
+    //    try {
+    //        Object value = evaluate(expression);
+    //        System.out.println(stringify(value));
+    //    } catch (RuntimeError error) {
+    //        Lox.runtimeError(error);
+    //    }
+    //}
+    /*
+    Our interpreter is able to visit statements now, but we have some work
+    to do to feed them to it. First, modify the old `interpret()` method
+    int the Interpreter class to accept a list of statements
+     */
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
@@ -77,6 +94,29 @@ class Interpreter implements Expr.Visitor<Object> {
 
     private Object evaluate(Expr expr) {
         return expr.accept(this);
+    }
+
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    /*
+    Java doesn't let you use `void` as a generic type argument for obscure reasons
+    having to do with type erasure and this stack.
+    Instead, there is a separate `Void` type specifically for this use. Sort of a
+    "boxed void", like "Integer" is for "int".
+     */
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
     }
 
     @Override
