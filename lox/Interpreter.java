@@ -64,6 +64,11 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return null;
+    }
+
 
     // Truthiness and falsiness
     private boolean isTruthy(Object object) {
@@ -116,6 +121,11 @@ class Interpreter implements Expr.Visitor<Object>,
     public Void visitPrintStmt(Stmt.Print stmt) {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
         return null;
     }
 

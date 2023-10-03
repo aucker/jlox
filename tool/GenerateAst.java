@@ -19,7 +19,8 @@ public class GenerateAst {
                 "Grouping   : Expr expression",
                 "Literal    : Object value",
 //>     Statement and State var-expr
-                "Unary      : Token operator, Expr right"
+                "Unary      : Token operator, Expr right",
+                "Variable   : Token name"
 //<     Statement and State var-expr
         ));
 
@@ -27,7 +28,8 @@ public class GenerateAst {
         defineAst(outputDir, "Stmt", Arrays.asList(
                 "Expression : Expr expression",
 //>     var-stmt-ast
-                "Print      : Expr expression"
+                "Print      : Expr expression",
+                "Var        : Token name, Expr initializer"
 //<     var-stmt-ast
         ));
 //<     Statements and State stmt-ast
