@@ -264,3 +264,10 @@ You can think of it like a map where the keys are variable names and the values 
 values. In fact, that's how we'll implement it in Java. We could stuff that map and the code to manage 
 it right into Interpreter, but since it forms a nicely delineated concept, we'll pull it out into its 
 own class.
+
+>Rule about variables and scoping is,
+> "When in double, do what Scheme does". The Scheme folks have probably spent more time thinking about
+> variable scope than we ever will - one of the main goals of Scheme was to introduce lexical scoping 
+> lexical scoping to the world - so it's hard to go wrong if you follow in their footsteps.
+> 
+> Scheme allows redefining variables at the top level.

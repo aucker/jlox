@@ -8,6 +8,7 @@ import static lox.lox.TokenType.MINUS;
 // but a default *class* is project protected
 class Interpreter implements Expr.Visitor<Object>,
                              Stmt.Visitor<Void> {
+    private Environment environment = new Environment();
 
     //void interpret(Expr expression) {
     //    try {
@@ -64,9 +65,15 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+    /*
+    This simply forwards to the environment which does the heavy lifting to
+    make sure the variable is defined. With that, we've got rudimentary varaibles
+    working
+     */
     @Override
     public Object visitVariableExpr(Expr.Variable expr) {
-        return null;
+        //return null;
+        return environment.get(expr.name);
     }
 
 
@@ -124,8 +131,20 @@ class Interpreter implements Expr.Visitor<Object>,
         return null;
     }
 
+
+    /*
+    If the variable has an initializer, we evaluate it. If not, we have another
+    choice to make. We could have made this a syntax error in the parser by
+    requiring an initializer.
+     */
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+        if (stmt.initializer != null) {
+            value = evaluate(stmt.initializer);
+        }
+
+        environment.define(stmt.name.lexeme, value);
         return null;
     }
 
