@@ -206,4 +206,27 @@ Inside the parentheses, you have three clauses separated by semicolons:
 Any of these clauses can be omitted. Following the closing parenthesis is a statement for the body, which is typically
 a block.
 
-### 
+### *Desugaring*
+
+That's a lot of machinery, but note that none of it does anything you couldn't do with the statements we already have.
+If `for` loops didn't support initializer clauses, you could just put the initializer expression before the `for` 
+statement. Without an increment clause, you could simply put the increment expression at the end of the body yourself.
+
+In other words, Lox doesn't *need* `for` loops, they just make some common code patterns more pleasant to write. These 
+kinds of features are called **syntactic sugar**. E.g., the previous `for` loop could be rewritten like so:
+```shell
+{
+  var i = 0;
+  while (i < 10) {
+    print i;
+    i = i + 1;
+  }
+}
+```
+This script has the exact same semantics as the previous one, though it's not as easy on the eyes. Syntactic sugar
+features like Lox's `for` loop make a language more pleasant and productive to work in. But, especially in sophisticated
+language implementations, every language feature that requires back-end support and optimization is expensive.
+
+We can have our cake and eat it too by **desugaring**. That funny word describes a process where the front end takes 
+code using syntax sugar and translates it to a more primitive form that the back end already knows how to execute.
+
