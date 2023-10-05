@@ -185,3 +185,52 @@ block, using the same grammar rule that block statements use. The parameter list
 ```shell
 parameters       -> IDENTIFIER ( "," IDENTIFIER )* ;
 ```
+
+## Function Objects
+
+We've got some syntax parsed so usually we're ready to interpret, but first we need to think about how to represent a
+Lox function in Java. We need to keep track of the parameters so that we can bind them to argument values when the 
+function is called. And, of course, we need to keep the code for the body of the function so that we can execute it.
+
+Parameters are core to functions, especially the fact that a function *encapsulates* its parameters - no other code 
+outside the function can see them. This means each function gets its own environment where it stores those variables.
+
+Further, this environment must be created dynamically. Each function *call* gets its own environment. Otherwise, 
+recursion would break. If there are multiple calls to the same function in play at the same time, each needs its *own* 
+environment, even though they are all calls to the same function.
+
+E.g., here's a convoluted way to count to three:
+```shell
+fun count(n) {
+  if (n > 1) count(n - 1);
+  print n;
+}
+
+count(3);
+```
+Imagine we pause the interpreter right at the point where it's about to print 1 in the innermost nested call. The outer
+calls to print 2 and 3 haven't printed their values yet, so there must be environments somewhere in memory that still
+store the fact that `n` is bound to 3 in one context, 2 in another, and 1 in the innermost, like:
+![count-fun](../pic/count-fun.png)
+That's why we create a new environment at each *call*, not at the function *declaration*. The `call()` method we saw 
+earlier does that. At the beginning of the call, it creates a new environment. Then it walks the parameter and argument
+lists in lockstep. For each pair, it creates a new variable with the parameter's name and binds it to the argument's 
+value.
+
+So, for a program like this:
+```shell
+fn add(a, b, c) {
+  print a + b + c;
+}
+
+add(1, 2, 3);
+```
+At the point of the call to `add()`, the interpreter creates something like this:
+![add-fun](../pic/add-fun.png)
+Then `call()` tells the interpreter to execute the body of the function in this new function-local environment. Up till
+now, the current environment was the environment where the function was being called. Now, we teleport from there inside
+the new parameter space we've created for the function.
+
+This is all that's required to pass data into the function. By using different environments when we execute the body, 
+calls to the same function with the same code can produce different results.
+
