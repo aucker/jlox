@@ -277,3 +277,33 @@ omit the value in a `return` statement, we simply treat it as equivalent to:
 ```shell
 return nil;
 ```
+
+### *Returning from calls*
+
+Interpreting a `return` statement is tricky. You can return from anywhere within the body of a function, even deeply 
+nested inside other statements. When the return is executed, the interpreter needs to jump all the way out of whatever
+context it's currently in and cause the function calls to complete, like some kind of jacked-up control flow construct.
+
+E. g., say we're running this program and we're about to execute the `return` statement:
+```shell
+fun count(n) {
+  while (n < 100) {
+    if (n == 3) return n;  // <--
+    print n;
+    n = n + 1;
+  }
+}
+count(1);
+```
+
+The Java call stack currently looks roughly like this:
+```shell
+Interpreter.visitReturnStmt()
+Interpreter.visitIfStmt()
+Interpreter.executeBlock()
+Interpreter.visitBlockStmt()
+Interpreter.visitWhileStmt()
+Interpreter.executeBlock()
+Interpreter.call()
+Interpreter.visitCallExpr()
+```
