@@ -307,3 +307,65 @@ Interpreter.executeBlock()
 Interpreter.call()
 Interpreter.visitCallExpr()
 ```
+
+## Local Functions and Closures
+
+Our functions are pretty full-featured, but there is one hole to patch. LoxFunction's implementation of `call()` creates
+a new environment where it binds the function's parameters. When I showed you that code, I glossed over one important
+point: What is the *parent* of that environment?
+
+Right now, it is always `globals`, the top-level global environment. That way, if an identifier isn't defined inside the
+function body itself, the interpreter can look outside the function in the global scope to find it. In the Fibonacci 
+e.g., that's how the interpreter is able to look up the recursive call to `fib` inside the function's own body - `fib`
+is a global variable.
+
+But recall that in Lox, function declarations are allowed *anywhere* a name can be bound. That includes the top level of
+a Lox script, but also the inside of blocks or other functions. Lox supports **local functions** that are defined inside
+another function, or nested inside a block.
+
+Consider this classic e.g.:
+```shell
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+  return count;
+}
+
+var counter = makeCounter();
+counter();  // "1"
+counter();  // "2"
+```
+Here, `count()` uses `i`, which is declared outside itself in the containing function `makeCounter()`. `makeCounter()` 
+returns a reference to the `count()` function and then its own body finishes executing completely.
+
+Meanwhile, the top-level code invokes the returned `count()` function. That executes the body of `count()`, which 
+assigns to and reads `i`, even though the function where `i` was defined has already exited.
+
+If you've never encountered a language with nested functions before, this might seem crazy, but users do expect it to
+work. Alas, if you run it now, you get an undefined variable error in the call to `counter()` when the body of `count()`
+tries to look up `i`. That's because the environment chain in effect looks like this:
+![environment-chain](../pic/environment-chain.png)
+When we call `count()` (through the reference to it stored in `counter`), we create a new empty environment for the 
+function body. The parent of that is the global environment. We lost the environment for `makeCounter()` where `i` is 
+bound.
+
+Let's go back in time a bit. Here's what the environment chain looked like right when we declared `count()` inside the
+body of `makeCounter()`:
+![environment-chain-count](../pic/environment-chain-count.png)
+So at the point where the function is declared, we can see `i`. But when we return from `makeCounter()` and exit its 
+body, the interpreter discards that environment. Since the interpreter doesn't keep the environment surrounding 
+`count()` around, it's up to the function object itself to hang on to it.
+
+This data structure is called a **closure** because it "closes over" and holds on to the surrounding variables where the
+function is declared. Closures have been around since the early Lisp days, and language hackers have come up with all 
+manner of ways to implement them. For jlox, we'll do the simplest thing that works.
+
+![environment-chain-closure](../pic/environment-chain-closure.png)
+Now, the interpreter can still find `i` when it needs to because it's in the middle of the environment chain. 
+
+Functions let us abstract over, reuse, and compose code. Lox is much more powerful than the rudimentary arithmetic 
+calculator it used to be. Alas, in our rush to cram closure in, we have let a tiny bit of dynamic scoping leak into the
+interpreter.
