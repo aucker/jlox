@@ -9,7 +9,35 @@ import static lox.lox.TokenType.MINUS;
 // but a default *class* is project protected
 class Interpreter implements Expr.Visitor<Object>,
                              Stmt.Visitor<Void> {
-    private Environment environment = new Environment();
+    final Environment globals = new Environment();
+    //private Environment environment = new Environment();
+    /*
+    `environment` field tracks the *current* environment.
+    `globals` field holds a fixed reference to the outermost global environment.
+     */
+    private Environment environment = globals;
+
+    Interpreter() {
+        globals.define("clock", new LoxCallable() {
+            @Override
+            public int arity() { return 0; }
+
+            @Override
+            public Object call(Interpreter interpreter,
+                               List<Object> arguments) {
+                return (double)System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString() { return "<native fn>"; }
+        });
+        /*
+        This defines a variable named "clock". Its value is a Java anonymous class
+        that implements LoxCallable. The `clock()` function takes no arguments, so
+        its arity is zero. The implementation of `call()` calls the corresponding
+        Java function and converts the result to a double value in seconds.
+         */
+    }
 
     //void interpret(Expr expression) {
     //    try {
