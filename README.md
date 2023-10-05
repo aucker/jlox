@@ -3,7 +3,45 @@
 Learning how to implement an interpreter🔨 from scratch.
 
 There are several parts in Jlox, I don't know how to write the makefile to run Java project right
-now, so I use *Android Studio*.
+now, so I use **Android Studio**.
+
+## Design NOTE: Spoonfuls of Syntactic Sugar
+
+On the extreme acrid end are those with ruthlessly minimal syntax like Lisp, Forth, and Smalltalk.
+Lispers famously claim their language "has no syntax", while Smalltalkers proudly show that you can 
+fit the entire grammar on an index card. This tribe has the philosophy that the *language* doesn't 
+need syntactic sugar. Instead, the minimal syntax and semantics it provides are powerful enough to
+let library code be as expressive as if it were part of the language itself.
+
+Near these are languages like C, Lua, and Go. They aim for simplicity and clarity over minimalism. 
+Some, like Go, deliberately eschew both syntactic sugar and the kind of syntactic extensibility of 
+the previous category. They want the syntax to get out of the way of the semantics, so they focus on
+keeping both the grammar and libraries simple. Code should be obvious more than beautiful.
+
+Somewhere in the middle you have languages like Java, C#, and Python. Eventually you reach Ruby, C++,
+Perl, and D - Languages which have stuffed so much syntax into their grammar, they are running out 
+of punctuation characters on the keyboard.
+
+To some degree, location on the spectrum correlates with age. It's relatively easy to add bits of 
+syntactic sugar in later releases. New syntax is a crowd pleaser, and it's less likely to break 
+existing programs than mucking with the semantics. Once added, you can never take it away, so languages
+tend to sweeten with time. One of the main benefits of creating a new language from scratch is it 
+gives you an opportunity to scrape off those accumulated layers of frosting and start over.
+
+Syntactic sugar has a bad rap among the PL intelligentsia. There's a real fetish for minimalism in
+that crowd. There is some justification for that. Poorly designed, unneeded syntax raises the cognitive
+load w/o adding enough expressiveness to carry its weight. Since there is always pressure to cram new 
+features into the language, it takes discipline and a focus on simplicity to avoid bloat. Once you 
+add some syntax, you're stuck with it, so it's smart to be parsimonious.
+
+At the same time, the most successful languages do have fairly complex grammars, at least by the time they
+are widely used. Programmers spend a ton of time in their language of choice, and a few niceties here
+and there really can improve the comfort and efficiency of their work.
+
+Striking the right balance -- choose the right level of sweetness for your language -- relies on your own 
+sense of taste.
+
+-----------------------------------------
 
 When running the scan section code, the interpreter can recognize certain characters. Like `!`, `(`
 etc.
