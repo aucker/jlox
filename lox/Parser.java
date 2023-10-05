@@ -44,6 +44,12 @@ class Parser {
 
     private Stmt declaration() {
         try {
+            /*
+            When encounter `fun`, call `function`.
+            That corresponds to the `function` grammar rule since we already
+            matched and consumed the `fun` keyword.
+             */
+            if (match(FUN)) return function("function");
             if (match(VAR)) return varDeclaration();
 
             return statement();
@@ -165,6 +171,43 @@ class Parser {
         Expr expr = expression();
         consume(SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
+    }
+
+    private Stmt.Function function(String kind) {
+        /*
+        Right now, it only consumes the identifier token for the function's name.
+         */
+        Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        /*
+        We parse the parameter list and the pair of parentheses wrapped around it.
+         */
+        consume(LEFT_PAREN, "Expect '(' after " + kind + " name.");
+        List<Token> parameters = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.");
+                }
+
+                parameters.add(
+                        consume(IDENTIFIER, "Expect parameter name.")
+                );
+            } while (match(COMMA));
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        /*
+        Finally, we parse the body and wrap it all up in a function node.
+         */
+        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        List<Stmt> body = block();
+        /*
+        We consume the `{` at the beginning of the body here before calling `block()`.
+        That's because `block()` assumes the brace token has already been matched.
+        Consuming it here lets us report a more precise error message if the `{` isn't
+        found since we know it's in the context of a function declaration.
+         */
+        return new Stmt.Function(name, parameters, body);
     }
 
     private List<Stmt> block() {

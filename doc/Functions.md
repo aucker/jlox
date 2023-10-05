@@ -151,3 +151,37 @@ function is defined in the global scope, so let's ensure the interpreter has acc
 > variables in the same namespace, and "Lisp-2" for languages like Common Lisp that partition them. Despite being 
 > totally opaque, those names have since stuck. Lox is a Lisp-1.
 
+## Function Declarations
+
+We finally get to add a new production to the `declaration` rule we introduced back when we added variables. Function
+declarations, like variables, bind a new name. That means they are allowed only in places where a declaration is 
+permitted.
+```shell
+declaration     -> funDecl
+                 | varDecl
+                 | statement ;
+```
+The updated `declaration` rule references this new rule:
+```shell
+funDecl         -> "fun" function ;
+function        -> IDENTIFIER "(" parameters? ")" block ;
+```
+The main `funDecl` rule uses a separate helper rule `function`. A function *declaration statement* is the `fun` keyword
+followed by the actual function-y stuff. When we get to classes, we'll reuse that `function` rule for declaring methods.
+Those look similar to function declarations, but aren't preceded by `fun`.
+
+> A named function declaration isn't really a single primitive operation. It's syntactic sugar for two distinct steps:
+> (1) creating a new function object, and (2) binding a new variable to it. If Lox had syntax for anonymous functions, 
+> we wouldn't need function declaration statements. You could just do:
+> ```shell
+> var add = fun (a, b) {
+>   print a + b;
+> };
+> ```
+> However, since named functions are the common case, I went ahead and gave Lox nice syntax for them.
+
+The function itself is a name followed by the parenthesized parameter list and the body. The body is always a braced 
+block, using the same grammar rule that block statements use. The parameter list uses this rule:
+```shell
+parameters       -> IDENTIFIER ( "," IDENTIFIER )* ;
+```
