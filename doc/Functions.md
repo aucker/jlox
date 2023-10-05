@@ -234,3 +234,8 @@ the new parameter space we've created for the function.
 This is all that's required to pass data into the function. By using different environments when we execute the body, 
 calls to the same function with the same code can produce different results.
 
+### *Interpreting function declarations*
+
+Function declarations are different from other literal nodes in that the declaration *also* binds the resulting object
+to a new variable. So, after creating the LoxFunction, we create a new binding in the current environment and store a 
+reference to it there.
