@@ -318,3 +318,28 @@ they'll be.
 Our resolution pass is a fine place to detect this error statically. It already detects `return` statements outside of
 functions. We'll do something similar for `this`. In the vein of our existing FunctionType enum, we define a new 
 ClassType one.
+
+## Constructors and Initializers
+
+How do we ensure a brand-new object *starts* in a good state?
+
+For that, we need constructors. I find them one of the trickiest parts of a language to design, and if you peer closely
+at most other languages, you'll see cracks around object construction where the seams of the design don't quite fit
+together perfectly. Maybe there's something intrinsically messy about the moment of birth.
+
+> E.g. In Java, even though final fields must be initialized, it is still possible to read one *before* it has been. 
+> Exceptions - a huge, complex feature - were added to C++ mainly as a way to emit errors from constructors.
+
+"Constructing" an object is actually a pair of operations:
+1. The runtime *allocates* the memory required for a fresh instance. In most languages, this operation is at a 
+fundamental level beneath what user code is able to access.
+2. Then, a user-provided chunk of code is called which *initializes* the unformed object.
+
+The latter is what we tend to think of when we hear "constructor", but the language itself has usually done some 
+groundwork for us before we get to that point. In fact, our Lox interpreter already has that covered when it creates a
+new LoxInstance object.
+
+We'll do the remaining part - user-defined initialization - now. Languages have a variety of notations for the chunk of
+code that sets up a new object for a class. C++, Java, and C# use a method whose name matches the class name. Ruby and
+Python call it `init()`. The latter is nice and short, so we'll do that.
+
