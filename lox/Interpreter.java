@@ -86,6 +86,20 @@ class Interpreter implements Expr.Visitor<Object>,
         return evaluate(expr.right);
     }
 
+    @Override
+    public Object visitSetExpr(Expr.Set expr) {
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof LoxInstance)) {
+            throw new RuntimeError(expr.name,
+                    "Only instances have fields.");
+        }
+
+        Object value = evaluate(expr.value);
+        ((LoxInstance)object).set(expr.name, value);
+        return value;
+    }
+
     /*
     Evaluating parentheses
      */
@@ -387,6 +401,17 @@ class Interpreter implements Expr.Visitor<Object>,
         Hoisting it up into the visit method lets us do it in one place.
          */
         return function.call(this, arguments);
+    }
+
+    @Override
+    public Object visitGetExpr(Expr.Get expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance) {
+            return ((LoxInstance) object).get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name,
+                "Only instances have properties.");
     }
 
     private void checkNumberOperand(Token operator, Object operand) {

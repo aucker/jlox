@@ -64,3 +64,46 @@ expressions on class objects to create new instances. It's as if a class is a fa
 of itself. This feels elegant to me, and also spares us the need to introduce syntax like `new`. Therefore, we can skip
 past the front end straight into the runtime.
 
+## Properties on Instances
+
+After creating the instances, we should make them useful. We're at a fork in the road. We could add behavior first -
+mothods - or we could start with state - properties. We're going to take the latter because, as we can see, the two get
+entangled in an interesting way and it will be easier to make sense of them if we get properties working first.
+
+Lox follows JavaScript and Python in how it handles state. Every instance is an open collection of named values. Methods
+on the instance's class can access and modify properties, but so can outside code. Properties are accessed using a `.` 
+syntax.
+```shell
+someObject.someProperty
+```
+An expression followed by `.` and an identifier reads the property with that name from the object the expression 
+evaluates to. That dot has the same precedence as the parentheses in a function call expression, so we slot it into the
+grammar by replacing the existing `call` rule with:
+```shell
+call        -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
+```
+After a primary expression, we allow a series of any mixture of parenthesized called and dotted property accesses. 
+"Property access" is a mouthful, so from here on out, we'll call these "get expressions".
+
+### *Get expressions*
+
+The outer `while` loop there corresponds to the `*` in the grammar rule. We zip along the tokens building up a chain of
+calls and gets as we find parentheses and dots, like so:
+![while-loop](../pic/while-loop.png)
+
+### *Set expressions*
+
+Setters use the same syntax as getters, except they appear on the left side of an assignment.
+```shell
+someObject.someProperty = value;
+```
+In grammar land, we extend the rule for assignment to allow dotted identifiers on the left-hand side.
+```shell
+assignment      -> ( call ".")? IDENTIFIER "=" assignment
+                 | logic_or ;
+```
+Unlike getters, setters don't chain. However, the reference to `call` allows any high-precedence expression before the
+last dot, including any number of *getters*, as in:
+![getter-chain](../pic/getter-chain.png)
+Note here that only the *last* part, the `.meat` is the *setter*. The `.omelette` and `.filling` parts are both *get*
+expressions.
