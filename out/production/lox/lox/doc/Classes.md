@@ -357,3 +357,26 @@ print foo.init();
 ```
 Can you "re-initialize" an object by directly calling its `init()` method? If you do, what does it return? A reasonable
 answer would be `nil` since that's what it appears the body returns.
+
+### *Returning from init()*
+
+We aren't out of the woods yet. We've been assuming that a user-written initializer doesn't explicitly return a value
+because most constructors don't. E.g.:
+```shell
+class Foo {
+  init() {
+    return "something else";
+  }
+} // it return nothing
+```
+We need to return error for this initializer.
+
+Still, e.g.
+```shell
+class Foo {
+  init() {
+    return;
+  }
+} // return nothing
+```
+We also need return error for this initializer.
