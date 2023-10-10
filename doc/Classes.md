@@ -216,3 +216,85 @@ Python calls these **bound methods**.
 In practice, that's usually what you want. If you take a reference to a method on some object so you can use it as a 
 callback later, you want to remember the instance it belonged to, even if that callback happens to be stored in a field
 on some other object.
+
+## This
+
+We can define both behavior and state on objects, but they aren't tied together yet. Inside a method, we have no way to
+access the fields of the "current" object - the instance that the method was called on - nor can we call other methods
+on that same object.
+
+To get at that instance, it needs a name. Smalltalk, Ruby, and Swift use "self". Simula, C++, Java, and other use 
+"this". Python uses "self" be convention, but you can technically it whatever you like.
+> "I" would have been a great choice, but using "i" for loop variables predates OOP and goes all the way back to 
+> Fortran. We are victims of the incidental choices of our forebears.
+
+For Lox, since we generally hew to Java-ish style, we'll go with "this". Inside a method body, a `this` expression 
+evaluates to the instance that the method was called on. Or, more specifically, since methods are accessed and then 
+invoked as two steps, it will refer to the object that the method was *accessed* from.
+
+That makes our job harder. Peep at:
+```shell
+class Egotist {
+  speak() {
+    print this;
+  }
+}
+var method = Egotist().speak;
+method();
+```
+On the second-to-last line, we grab a reference to the `speak()` method off an instance of the class. That returns a 
+function, and that function needs to remember the instance it was pulled off of so that *later*, on the last line, it 
+can still find it when the function is called.
+
+We need to take `this` at the point that the method is accessed and attach it to the function somehow so that it stays
+around as long as we need it to. Hmm... a way to store some extra data that hangs around a function. eh? That sounds an 
+awful lot like a *closure*, doesn't it?
+
+If we defined `this` as a sort of hidden variable in an environment that surrounds the function returned when looking 
+up a method, then uses of `this` in the body would be able to find it later. LoxFunction already has the ability to hold
+on to a surrounding environment, so we have the machinery we need.
+
+E.g.: 
+```shell
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();  // Prints "The German chocolate cake is delicious!".
+```
+When we first evaluate the class definition, we create a LoxFunction for `taste()`. Its closure is the environment
+surrounding the class, in this case the global one. So the LoxFunction we store in the class's method map looks like so:
+![LoxFunction](../pic/lox-function-class.png)
+When we evaluate the `cake.taste` get expression, we create a new environment that binds `this` to the object the method
+is accessed from (here, `cake`). Then we maek a *new* LoxFunction with the same code as the original one but using that 
+new environment as its closure.
+![LoxFunction-parent](../pic/lox-fun-class-parent.png)
+This is the LoxFunction that gets returned when evaluating the get expression for the method name. When that function is
+later called by a `()` expression, we create an environment for the method body as usual.
+![LoxFunction-body](../pic/lox-fun-class-body.png)
+The parent of the body environment is the environment we created earlier to bind `this` to the current object. Thus any
+use of `this` inside the body successfully resolves to that instance.
+
+Reusing our environment code for implementing `this` also takes care of interesting cases where methods and functions 
+interact, like:
+```shell
+class Thing {
+  getCallback() {
+    fun localFunction() {
+      print this;
+    }
+    
+    return localFunction;
+  }
+}
+
+var callback = Thing().getCallback();
+callback();
+```
+In, say, JavaScript, it's common to return a callback from inside a method. That callback may want to hang on to and 
+retain access to the original object - the `this` value - that the method was associated with. Our existing support for
+closures and environment chains should do all this correctly.
