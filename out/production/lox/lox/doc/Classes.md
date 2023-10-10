@@ -47,4 +47,20 @@ class Breakfast {
 }
 ```
 Like most dynamic typed languages, fields are not explicitly listed in the class declaration. Instances are loose bags
-of data and you can freely add fields to them as you see fit using normal imperative code.
+of data, and you can freely add fields to them as you see fit using normal imperative code.
+
+## Creating Instances
+
+We have classes, but they don't do anything yet. Lox doesn't have "static" methods that you can call right on the class
+itself, so w/o actual instances, classes are useless. Thus, instances are the next step.
+
+While some syntax and semantics are fairly standard across OOP languages, the way you create new instances isn't. Ruby,
+following Smalltalk, creates instances by calling a method on the class object itself, a recursively graceful approach.
+Some, like C++ and Java, have a `new` keyword dedicated to birthing a new object. Python has you "call" the class itself
+like a function. (JavaScript, ever weird, sort of does both.)
+
+I took a minimal approach with Lox. We already have class objects, and we already have function calls, so we'll use call
+expressions on class objects to create new instances. It's as if a class is a factory function that generates instances
+of itself. This feels elegant to me, and also spares us the need to introduce syntax like `new`. Therefore, we can skip
+past the front end straight into the runtime.
+
