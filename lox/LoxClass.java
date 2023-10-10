@@ -1,13 +1,28 @@
 package lox.lox;
 
 import java.util.List;
+import java.util.Map;
 
 //class LoxClass {
 class LoxClass implements LoxCallable {
 	final String name;
+	private final Map<String, LoxFunction> methods;
 
-	LoxClass(String name) {
+	//LoxClass(String name) {
+	//	this.name = name;
+	//}
+	LoxClass(String name, Map<String, LoxFunction> methods) {
 		this.name = name;
+		this.methods = methods;
+	}
+
+	LoxFunction findMethod(String name) {
+		if (methods.containsKey(name)) {
+			return methods.get(name);
+		}
+
+		// the name is not in HashMap
+		return null;
 	}
 
 	@Override
