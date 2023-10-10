@@ -343,3 +343,17 @@ We'll do the remaining part - user-defined initialization - now. Languages have 
 code that sets up a new object for a class. C++, Java, and C# use a method whose name matches the class name. Ruby and
 Python call it `init()`. The latter is nice and short, so we'll do that.
 
+### *Invoking init() directly*
+
+As usual, exploring this new semantic territory rustles up a few weird creatures. E.g.:
+```shell
+class Foo {
+  init() {
+    print this;
+  }
+}
+var foo = Foo();
+print foo.init();
+```
+Can you "re-initialize" an object by directly calling its `init()` method? If you do, what does it return? A reasonable
+answer would be `nil` since that's what it appears the body returns.
