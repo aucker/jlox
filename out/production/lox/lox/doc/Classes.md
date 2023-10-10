@@ -298,3 +298,23 @@ callback();
 In, say, JavaScript, it's common to return a callback from inside a method. That callback may want to hang on to and 
 retain access to the original object - the `this` value - that the method was associated with. Our existing support for
 closures and environment chains should do all this correctly.
+
+### *Invalid uses of this*
+
+Wait a minute. What happens if you try to use `this` *outside* of a method? What about:
+```shell
+print this;
+```
+Or: 
+```shell
+fun notAMethod() {
+  print this;
+}
+```
+There is no instance for `this` to point to if you're not in a method. We could give it some default value like `nil` or
+make it a runtime error, but the user has clearly made a mistake. The sooner they find and fix that mistake, the happier
+they'll be.
+
+Our resolution pass is a fine place to detect this error statically. It already detects `return` statements outside of
+functions. We'll do something similar for `this`. In the vein of our existing FunctionType enum, we define a new 
+ClassType one.
