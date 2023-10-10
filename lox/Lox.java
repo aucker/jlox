@@ -67,6 +67,19 @@ public class Lox {
         // Stop if there was a syntax error
         if (hadError) return;
 
+        /*
+        We don't run the resolver if there are any parse errors. If the code has a syntax error,
+        it's never going to run, so there's little value in resolving it. If the syntax is clean,
+        we tell the resolver to do its thing. The resolver has a reference to the interpreter and
+        pokes the resolution data directly into it as it walks over variables. When the interpreter
+        runs next, it has everything it needs.
+         */
+        Resolver resolver = new Resolver(interpreter);
+        resolver.resolve(statements);
+
+        // Stop if there was a resolution error.
+        if (hadError) return;
+
         // we don't need to print the AST tree, so
 //        System.out.println(new AstPrinter().print(expression));
 //        interpreter.interpret(expression);
