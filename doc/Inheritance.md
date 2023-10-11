@@ -187,3 +187,31 @@ the method's environment, like so:
 ![class-bound-invoke](../pic/class-bound-invoke.png)
 That's a lot of machinery, but we'll get through it a step at a time. Before we can get to creating the environment at 
 runtime, we need to handle the corresponding scope chain in the resolver.
+
+### *Invalid uses of super*
+
+As with previous language features, our implementation does the right thing when the user writes correct code, but we 
+haven't bulletproofed the interpreter against bad code. In particular, consider:
+```shell
+class Eclair {
+  cook() {
+    super.cook();
+    print "Pipe full of creme patisserie."
+  }
+}
+```
+This class has a `super` expression, but no superclass. At runtime, the code for evaluating `super` expressions assumes
+that "super" was successfully resolved and will be found in the environment. That's going to fail here because there is
+no surrounding environment for the superclass since there is no superclass. The JVM will throw an exception and bring 
+our interpreter to its knees.
+
+Hack, there are even simpler broken uses of super:
+```shell
+super.notEvenInAClass();
+```
+We could handle errors like these at runtime by checking to see if the lookup of "super" succeeded. But we can tell 
+statically - just by looking at the source code - that Eclair has no superclass and thus no `super` expression will work
+inside it. Likewise, in the second example, we know that the `super` expression is not even inside a method body.
+
+Even though Lox is dynamically typed, that doesn't mean we want to defer *everything* to runtime. If the user made a 
+mistake, we'd like to help them find it sooner rather later. So we'll report these errors statically, in the resolver.
