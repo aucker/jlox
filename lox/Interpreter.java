@@ -102,7 +102,28 @@ class Interpreter implements Expr.Visitor<Object>,
 
     @Override
     public Object visitSuperExpr(Expr.Super expr) {
-        return null;
+        int distance = locals.get(expr);
+        LoxClass superclass = (LoxClass) environment.getAt(
+                distance, "super");
+
+        /*
+        Unfortunately, inside the `super` expression, we don't have a convenient node
+        for the resolver to hang the number of hops to `this` on.
+        Fortunately, we do control the layout of the environment chains.
+        The environment where "this" is bound is always right inside the environment
+        where we store "super".
+         */
+        LoxInstance object = (LoxInstance) environment.getAt(
+                distance - 1, "this");
+
+        LoxFunction method = superclass.findMethod(expr.method.lexeme);
+
+        if (method == null) {
+            throw new RuntimeError(expr.method,
+                    "Undefined property '" + expr.method.lexeme + "'.");
+        }
+
+        return method.bind(object);
     }
 
     @Override
@@ -233,6 +254,11 @@ class Interpreter implements Expr.Visitor<Object>,
         }
 
         environment.define(stmt.name.lexeme, null);
+
+        if (stmt.superclass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superclass);
+        }
         //LoxClass klass = new LoxClass(stmt.name.lexeme);
 
         Map<String, LoxFunction> methods = new HashMap<>();
@@ -245,6 +271,10 @@ class Interpreter implements Expr.Visitor<Object>,
         //LoxClass klass = new LoxClass(stmt.name.lexeme, methods);
         LoxClass klass = new LoxClass(stmt.name.lexeme,
                 (LoxClass)superclass, methods);
+
+        if (superclass != null) {
+            environment = environment.enclosing;
+        }
 
         environment.assign(stmt.name, klass);
         return null;

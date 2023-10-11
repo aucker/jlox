@@ -128,3 +128,62 @@ can get a handle to a superclass method and invoke it separately.
 var method = super.cook;
 method();
 ```
+
+### *Semantics*
+
+Earlier, I said a `super` expression starts the method lookup from "the superclass", but *which* superclass? The naive 
+answer is the superclass of `this`, the object the surrounding method was called on. That coincidentally produces the 
+right behavior in a lot of cases, but that's not actually correct. Gaze upon:
+```shell
+class A {
+  method() {
+    print "A method";
+  }
+}
+
+class B < A {
+  method() {
+    print "B method";
+  }
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();
+```
+Translate this program to Java, C#, or C++ and it will print "A method", which is what we want Lox to do too. When this
+program runs, inside the body of `test()`, `this` is an instance of C. The superclass of C is B, but that is *not* where
+the lookup should start. If it did, we should hit B's `method()`.
+
+Instead, lookup should start on the superclass of *the class containing the* `super` *expression*. In this case, since
+`test()` is defined inside B, the `super` expression inside it should start the lookup on B's superclass - A.
+![class-inheritance-flow](../pic/class-inheritance-flow.png)
+> The execution flow looks something like this:
+> 1. We call `test()` on an instance of C.
+> 2. That enters the `test()` method inherited from B. That calls `super.method()`.
+> 3. The superclass of B is A, so that chains to `method()` on A, and the program prints "A method".
+
+Thus, in order to evaluate a `super` expression, we need access to the superclass of the class definition surrounding 
+the call. Alack and alas, at the point in the interpreter where we are executing a `super` expression, we don't have 
+that easily available.
+
+We *could* add a field to LoxFunction to store a reference to the LoxClass that owns that method. The interpreter would 
+keep a reference to the currently executing LoxFunction so that we could look it up later when we hit a `super` 
+expression. From there, we'd get the LoxClass of the method, then its superclass.
+
+One important difference is that we bound `this` when the method was *accessed*. The same method can be called on 
+different instances and each needs its own `this`. With `super` expressions, the superclass is a fixed property of the
+*class declaration itself*. Every time you evaluate some `super` expression, the superclass is always the same.
+
+That means we can create the environment for the superclass once, when the class definition is executed. Immediately 
+before we define the methods, we make a new environment to bind the class's superclass to the name `super`.
+![super-class](../pic/superclass.png)
+When we create the LoxFunction runtime representation for each method, that is the environment they will capture in 
+their closure. Later, when a method is invoked and `this` is bound, the superclass environment becomes the parent for 
+the method's environment, like so:
+![class-bound-invoke](../pic/class-bound-invoke.png)
+That's a lot of machinery, but we'll get through it a step at a time. Before we can get to creating the environment at 
+runtime, we need to handle the corresponding scope chain in the resolver.
