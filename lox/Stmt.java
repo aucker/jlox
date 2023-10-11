@@ -36,9 +36,9 @@ abstract class Stmt {
     Class(Token name,
          Expr.Variable superclass,
          List<Stmt.Function> methods) {
-    this.name = name;
-    this.superclass = superclass;
-    this.methods = methods;
+      this.name = name;
+      this.superclass = superclass;
+      this.methods = methods;
   }
 
     @Override

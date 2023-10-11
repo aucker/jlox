@@ -101,6 +101,11 @@ class Interpreter implements Expr.Visitor<Object>,
     }
 
     @Override
+    public Object visitSuperExpr(Expr.Super expr) {
+        return null;
+    }
+
+    @Override
     public Object visitThisExpr(Expr.This expr) {
         return lookUpVariable(expr.keyword, expr);
     }

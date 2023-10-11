@@ -196,6 +196,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	}
 
 	@Override
+	public Void visitSuperExpr(Expr.Super expr) {
+		return null;
+	}
+
+	@Override
 	public Void visitThisExpr(Expr.This expr) {
 		if (currentClass == ClassType.NONE) {
 			Lox.error(expr.keyword,

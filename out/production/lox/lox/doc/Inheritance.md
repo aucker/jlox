@@ -74,3 +74,57 @@ Lox is a dynamically typed language, so our requirements are much simpler. Basic
 method on an instance of the superclass, you should be able to call that method when given an instance of the subclass.
 In other words, methods are inherited from the superclass.
 
+## Calling Superclass Methods
+
+In `findMethod()` we look for a method on the current class *before* walking up the superclass chain. If a method with
+the same name exists in both the subclass and the superclass, the subclass one takes precedence or **overrides** the 
+superclass method. Sort of like how variables in inner scopes shadow outer ones.
+
+That's great if the subclass wants to *replace* some superclass behavior completely. But, in practice, subclasses often
+want to *refine* the superclass's behavior. They want to do a little work specific to the subclass, but also execute the
+original superclass behavior too.
+
+However, since the subclass has overridden the method, there's no way to refer to the original one. If the subclass 
+method tries to call it by name, it will just recursively hit its own override. We need a way to say "Call this method,
+but look for it directly on my superclass and ignore my override". Java uses `super` for this, and we'll use that same
+syntax in Lox. E.g.:
+```shell
+class Doughnut {
+  cook() {
+    print "Fry until golden brown";
+  }
+}
+class BostonCream < Doughnut {
+  cook() {
+    super.cook();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+```
+If you run this, is should print:
+```shell
+Fry until golden brown
+Pipe full of custard and coat with chocolate.
+```
+
+### *Syntax*
+
+With `this`, the keyword works sort of like a magic variable, and the expression is that one lone taken. But with 
+`super`, the subsequent `.` and property name is inseparable parts of the `super` expression. You can't have a bare 
+`super` token all by itself.
+```shell
+print super;  // should cause Syntax error.
+```
+So the new clause we add to the `primary` rule in our grammar includes the property access as well.
+```shell
+primary     -> "true" | "false" | "nil" | "this"
+             | NUMBER | STRING | IDENTIFIER | "(" expression ")"
+             | "super" "." IDENTIFIER ;
+```
+Typically, a `super` expression is used for a method call, but, as with regular methods, the argument list is *not* part
+of the expression. Instead, a super *call* is a super *access* followed by a function call. Like other method calls, you
+can get a handle to a superclass method and invoke it separately.
+```shell
+var method = super.cook;
+method();
+```
