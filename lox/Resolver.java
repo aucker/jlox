@@ -1,9 +1,6 @@
 package lox.lox;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import java.util.*;
 
 class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 	private final Interpreter interpreter;
@@ -47,6 +44,20 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
 		declare(stmt.name);
 		define(stmt.name);
+
+		if (stmt.superclass != null &&
+			stmt.name.lexeme.equals(stmt.superclass.name.lexeme)) {
+			Lox.error(stmt.superclass.name,
+					"A class can't inherit from itself.");
+		}
+
+		/*
+		We only resolve the case when the superclass is not null.
+		 */
+		if (stmt.superclass != null) {
+			//resolve(Collections.singletonList(stmt.superclass));
+			resolve(stmt.superclass);
+		}
 
 		beginScope();
 		scopes.peek().put("this", true);

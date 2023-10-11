@@ -379,4 +379,5 @@ class Foo {
   }
 } // return nothing
 ```
-We also need return error for this initializer.
+This is actually kind of useful sometimes, so we don't want to disallow it entirely. Instead, it should return `this` 
+instead of `nil`.
