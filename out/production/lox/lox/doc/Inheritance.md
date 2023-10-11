@@ -61,3 +61,16 @@ happen if we allow code like:
 var NotAClass = "I am totally not a class";
 class Subclass < NotAClass {} // ?!
 ```
+
+
+## Inheriting Methods
+
+Inheriting from another class means that everything that's true of the superclass should be true, more or less, of the 
+subclass. In statically typed languages, that carries a lot of implications. The sub*class* must also be a sub*type*, 
+and the memory layout is controlled so that you can pass an instance of a subclass to a function expecting a superclass
+and it can still access the inherited fields correctly.
+
+Lox is a dynamically typed language, so our requirements are much simpler. Basically, it means that if you call some 
+method on an instance of the superclass, you should be able to call that method when given an instance of the subclass.
+In other words, methods are inherited from the superclass.
+
